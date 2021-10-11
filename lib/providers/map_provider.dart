@@ -5,6 +5,9 @@ import 'package:maps/models/mark_model.dart';
 import 'package:maps/services/marks_service.dart';
 
 class MapProvider extends ChangeNotifier {
+  CameraPosition _position = CameraPosition(
+      target: LatLng(-12.069187517490702, -77.0119635667644900), zoom: 16);
+
   List<LatLng> _polylines = [];
   Set<Marker> _markers = {};
   String _mapStyle = "";
@@ -15,7 +18,15 @@ class MapProvider extends ChangeNotifier {
 
   MapProvider() {
     _loadIcons();
-    ;
+  }
+
+  CameraPosition get position {
+    if (polylines.length > 0) {
+      this._position = CameraPosition(
+          target: LatLng(polylines[0].latitude, polylines[0].longitude),
+          zoom: 16);
+    }
+    return this._position;
   }
 
   List<LatLng> get polylines {
@@ -38,7 +49,7 @@ class MapProvider extends ChangeNotifier {
     List<MarkModel> marks = marksResponseDto.data!
         .map((mark) => MarkModel(
             mark.id!,
-            mark.name!,
+            mark.name == null ? "" : mark.name!,
             double.parse(mark.latitude!),
             double.parse(mark.longitude!),
             mark.isBusStop!,
@@ -73,7 +84,7 @@ class MapProvider extends ChangeNotifier {
         .toSet();
 
     if (markers.length > 0) {
-      this._markers = markers;
+      this._markers.addAll(markers);
     }
   }
 

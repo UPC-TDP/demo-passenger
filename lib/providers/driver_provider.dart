@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -15,12 +16,32 @@ class DriverProvider extends ChangeNotifier {
 
   final String MARKER_ID_DRIVER = "driver";
 
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
   set markers(Set<Marker> markers) {
     this._markers = markers;
   }
 
   DriverProvider() {
     _loadDriverIcon();
+  }
+
+  void loadDrivers() {
+    Stream<QuerySnapshot> driverStream =
+        _firestore.collection('routes/1/drivers').snapshots();
+    driverStream.listen((event) {
+      _removeDriverMarker();
+      event.docs.forEach((driver) {
+        if (driver['latitude'] != null &&
+            driver['longitude'] != null &&
+            driver['rotation'] != null) {
+          _addDriverMarker(MARKER_ID_DRIVER + driver.id, driver['latitude'],
+              driver['longitude'], driver['rotation']);
+        }
+      });
+
+      notifyListeners();
+    });
   }
 
   void drive(GoogleMapController googleMapController) async {
@@ -56,18 +77,23 @@ class DriverProvider extends ChangeNotifier {
   }
 
   void _updateDriverMarker(LocationData location) {
-    LatLng latlng = LatLng(location.latitude!, location.longitude!);
+    _removeDriverMarker();
+    _addDriverMarker(MARKER_ID_DRIVER, location.latitude!, location.longitude!,
+        location.heading!);
+  }
 
-    try {
-      Marker driverMarker = _markers
-          .firstWhere((marker) => marker.markerId.value == MARKER_ID_DRIVER);
-      _markers.remove(driverMarker);
-    } catch (e) {}
+  void _removeDriverMarker() {
+    _markers.removeWhere(
+        (marker) => marker.markerId.value.contains(MARKER_ID_DRIVER));
+  }
+
+  void _addDriverMarker(id, latitude, longitude, rotation) {
+    LatLng latlng = LatLng(latitude, longitude);
 
     Marker driverMarker = Marker(
-        markerId: MarkerId(MARKER_ID_DRIVER),
+        markerId: MarkerId(id),
         position: latlng,
-        rotation: location.heading!,
+        rotation: rotation,
         draggable: false,
         zIndex: 2,
         flat: true,

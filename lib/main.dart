@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -6,7 +7,9 @@ import 'package:maps/providers/driver_provider.dart';
 import 'package:maps/providers/map_provider.dart';
 import 'package:provider/provider.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   _setupLogging();
   runApp(MyApp());
 }
@@ -44,9 +47,6 @@ class MyApp extends StatelessWidget {
 class Maps extends StatelessWidget {
   Maps({Key? key}) : super(key: key);
 
-  static const START_POSITION = CameraPosition(
-      target: LatLng(-11.997753825747768, -77.10128308860702), zoom: 16);
-
   late GoogleMapController googleMapController;
 
   late String _mapStyle;
@@ -55,10 +55,14 @@ class Maps extends StatelessWidget {
     Provider.of<MapProvider>(context, listen: false).loadRoute();
   }
 
-  void _loadDriver(BuildContext context) {
-    Provider.of<DriverProvider>(context, listen: false)
-        .drive(this.googleMapController);
+  void _loadDrivers(BuildContext context) {
+    Provider.of<DriverProvider>(context, listen: false).loadDrivers();
   }
+
+  // void _loadDriver(BuildContext context) {
+  //   Provider.of<DriverProvider>(context, listen: false)
+  //       .drive(this.googleMapController);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +72,7 @@ class Maps extends StatelessWidget {
 
     return Scaffold(
       body: GoogleMap(
-          initialCameraPosition: START_POSITION,
+          initialCameraPosition: Provider.of<MapProvider>(context).position,
           zoomControlsEnabled: false,
           onMapCreated: onMapCreatedEvent,
           markers: markers,
@@ -86,7 +90,7 @@ class Maps extends StatelessWidget {
         backgroundColor: Colors.green,
         onPressed: () {
           _loadRoute(context);
-          _loadDriver(context);
+          _loadDrivers(context);
         },
       ),
     );
