@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
+import 'package:maps/providers/route_provider.dart';
+import 'package:provider/provider.dart';
 
 class DriverProvider extends ChangeNotifier {
   Location location = Location();
@@ -26,9 +28,15 @@ class DriverProvider extends ChangeNotifier {
     _loadDriverIcon();
   }
 
-  void loadDrivers() {
+  void loadDrivers(BuildContext context) {
+    String route =
+        Provider.of<RouteProvider>(context, listen: false).selectedRoute;
+    String driverCollection = 'routes/' + route + '/drivers';
+
+    print(driverCollection);
+
     Stream<QuerySnapshot> driverStream =
-        _firestore.collection('routes/1/drivers').snapshots();
+        _firestore.collection(driverCollection).snapshots();
     driverStream.listen((event) {
       _removeDriverMarker();
       event.docs.forEach((driver) {

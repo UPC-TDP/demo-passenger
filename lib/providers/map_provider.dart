@@ -42,6 +42,8 @@ class MapProvider extends ChangeNotifier {
   }
 
   void loadRoute() async {
+    _cleanMap();
+
     MarksService marksService = MarksService.create();
     MarksResponseDto marksResponseDto =
         MarksResponseDto.fromJson((await marksService.getMarks()).body);
@@ -111,5 +113,10 @@ class MapProvider extends ChangeNotifier {
 
     _busStopIcon = await BitmapDescriptor.fromAssetImage(
         ImageConfiguration(devicePixelRatio: 2.5), 'assets/bus-stop.png');
+  }
+
+  void _cleanMap() {
+    _polylines = [];
+    _markers = {};
   }
 }
