@@ -31,7 +31,7 @@ class DriverProvider extends ChangeNotifier {
   void loadDrivers(BuildContext context) {
     String route =
         Provider.of<RouteProvider>(context, listen: false).selectedRoute;
-    String driverCollection = 'routes/' + route + '/drivers';
+    String driverCollection = 'companies/sesosa/routes/' + route + '/drivers';
 
     print(driverCollection);
 
